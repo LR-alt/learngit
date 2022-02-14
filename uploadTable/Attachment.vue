@@ -34,10 +34,9 @@ export default {
       const curDefRules = defRules.filter(item => !this.exclude.includes(item.strategy))
       return [...curDefRules, ...customRules];
     },
-    emptyItem({ showColumns, idName }) {
+    emptyItem({ showColumns }) {
       const emptyObj = {};
-      const props = showColumns.map(item => item.prop).concat(idName);
-      props.forEach(prop => emptyObj[prop] = '');
+      showColumns.forEach(item => emptyObj[item.prop] = '');
       return emptyObj;
     }
   },
@@ -45,7 +44,7 @@ export default {
     // 初始化校验
     const startVerify = useValidator(strategies, this.allRules);
     // 初始化表格
-    const { addNewItem, setEffect } = useTableParams(this.tableData, this.uploadStateFns);
+    const { addNewItem, setEffect } = useTableParams(this.tableData, this.uploadStateFns, this.idName);
     // 挂载到this中
     Object.assign(this, {
       startVerify,
@@ -80,6 +79,21 @@ export default {
       default: '',
       required: true,
     },
+    // 状态函数
+    uploadStateFns: {
+      type: Object,
+      default: () => ({}),
+      validator(statusFnObj) {
+        const requiredFnNames = ['onBefore', 'onProgress', 'onSuccess', 'onError', 'onChange'];
+        const curFnNames = Object.keys(statusFnObj);
+        // 传入的属性值需为函数且函数名称必须包含于requiredFnNames中
+        return curFnNames.every(fnName => {
+          const isFn = typeof statusFnObj[fnName] === 'function';
+          const isInclude = requiredFnNames.includes(fnName);
+          return isFn && isInclude;
+        })
+      }
+    },
     // 自定义规则
     customRules: {
       type: Array,
@@ -98,21 +112,6 @@ export default {
     fileList: {
       type: Array,
       default: () => []
-    },
-    // 状态函数
-    uploadStateFns: {
-      type: Object,
-      default: () => ({}),
-      validator(statusFnObj) {
-        const requiredFnNames = ['onBefore', 'onProgress', 'onSuccess', 'onError', 'onChange'];
-        const curFnNames = Object.keys(statusFnObj);
-        // 传入的属性值需为函数且函数名称必须包含于requiredFnNames中
-        return curFnNames.every(fnName => {
-          const isFn = typeof statusFnObj[fnName] === 'function';
-          const isInclude = requiredFnNames.includes(fnName);
-          return isFn && isInclude;
-        })
-      }
     },
     tableData: {
       type: Array,
